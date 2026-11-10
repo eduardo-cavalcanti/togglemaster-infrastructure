@@ -200,3 +200,13 @@ module "argocd" {
 
   depends_on = [module.eks, module.ingress_nginx]
 }
+
+module "grafana" {
+  count  = var.install_grafana ? 1 : 0
+  source = "../../modules/grafana"
+
+  namespace     = var.grafana_namespace
+  chart_version = var.grafana_chart_version
+
+  depends_on = [module.eks]
+}
