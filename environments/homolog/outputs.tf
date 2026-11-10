@@ -56,3 +56,11 @@ output "microservice_external_urls" {
     analytics  = "http://${module.ingress_nginx[0].load_balancer_hostname}/analytics"
   }, null)
 }
+
+output "grafana_namespace" {
+  value = try(module.grafana[0].namespace, null)
+}
+
+output "grafana_internal_url" {
+  value = try(module.grafana[0].internal_url, null)
+}

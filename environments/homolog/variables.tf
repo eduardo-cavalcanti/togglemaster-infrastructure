@@ -229,3 +229,19 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "install_grafana" {
+  description = "Instala o Grafana no EKS existente via Helm."
+  type        = bool
+  default     = true
+}
+
+variable "grafana_namespace" {
+  type    = string
+  default = "observability"
+}
+
+variable "grafana_chart_version" {
+  type    = string
+  default = "9.3.2"
+}
