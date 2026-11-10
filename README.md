@@ -17,7 +17,7 @@ Infraestrutura como codigo do ToggleMaster, provisionada com Terraform na AWS. P
   microservicos pelos respectivos prefixos HTTP.
 - ArgoCD instalado no EKS pelo chart Helm oficial e root Application criada pelo
   mesmo `terraform apply` para iniciar a reconciliacao GitOps.
-- OpenTelemetry Collector em modo gateway, exposto somente por Service
+- Grafana instalado no EKS existente via Helm, no namespace `observability`, com Service `ClusterIP`, sem Ingress publico e sem EC2 dedicada. A senha inicial e gerada e armazenada na Secret Kubernetes padrao do chart. O armazenamento local do Grafana e efemero (persistencia desabilitada); dashboards devem ser provisionados declarativamente para nao se perderem apos recriacao do Pod.\n- OpenTelemetry Collector em modo gateway, exposto somente por Service
   `ClusterIP` nas portas OTLP 4317/4318 e exportando traces ao New Relic por
   HTTPS/443.
 
@@ -321,3 +321,19 @@ representar a AWS.
 O script nao procura nem apaga recursos fora do state Terraform. Ao final,
 confira o painel de billing do AWS Academy, pois recursos criados manualmente ou
 por outras atividades nao pertencem a este projeto.
+
+## Grafana no EKS
+
+O modulo `modules/grafana` instala o chart oficial Grafana nos nodes existentes do EKS por meio do provider Helm. Nao cria EC2, Security Group ou Load Balancer. O Service e `ClusterIP` e o acesso administrativo pode ser feito por port-forward:
+
+```bash
+kubectl -n observability port-forward svc/grafana 3000:80
+```
+
+Acesse `http://localhost:3000`. O usuario inicial e `admin`. Para consultar a senha inicial gerada pelo chart:
+
+```bash
+kubectl -n observability get secret grafana -o jsonpath='{.data.admin-password}' | base64 -d
+```
+
+A Secret e gerada pelo chart, sem novo secret do GitHub Actions ou variavel Terraform de senha. Proteja o acesso ao cluster e ao state. O modulo nao configura datasource Prometheus: ele sera integrado depois que o Service do Prometheus estiver definido pelo grupo. O chart usa armazenamento efemero; dashboards e configuracoes feitas apenas pela interface podem se perder quando o Pod for recriado. Para desabilitar a instalacao, use `install_grafana = false`.
